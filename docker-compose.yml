@@ -13,7 +13,7 @@ services:
       - CALLBACK_URL=${CALLBACK_URL:-http://localhost:8000/api/v1/callbacks/processing}
       - CALLBACK_SECRET=${CALLBACK_SECRET:-your_callback_secret_here}
     volumes:
-      - ./prompts:/app/prompts
+      - ./prompts:/ktru-claude-classifier/prompts
     depends_on:
       - redis
     restart: unless-stopped
