@@ -25,7 +25,8 @@ class Supplier(BaseModel):
 
 class Product(BaseModel):
     """Модель товара для обработки"""
-    _id: Dict[str, Any] = Field(..., description="Идентификатор товара")
+    # Изменено _id на mongo_id для избежания конфликта с Pydantic
+    mongo_id: Dict[str, Any] = Field(..., description="Идентификатор товара в MongoDB")
     title: str = Field(..., description="Название товара")
     description: str = Field(..., description="Описание товара")
     article: str = Field(..., description="Артикул товара")

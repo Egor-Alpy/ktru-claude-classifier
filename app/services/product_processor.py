@@ -90,7 +90,15 @@ JSON товара: {product_json}"""
 
         # Сохраняем товары в Redis
         for i, product in enumerate(products):
-            product_id = str(product.get("_id", {}).get("$oid", f"product_{uuid.uuid4()}"))
+            # Изменено с _id на mongo_id, с учетом обратной совместимости
+            product_id = ""
+            if "mongo_id" in product and "$oid" in product["mongo_id"]:
+                product_id = str(product["mongo_id"]["$oid"])
+            elif "_id" in product and "$oid" in product["_id"]:
+                product_id = str(product["_id"]["$oid"])
+            else:
+                product_id = f"product_{uuid.uuid4()}"
+
             product_key = f"product:{batch_id}:{product_id}"
 
             # Сохраняем исходный товар
@@ -125,7 +133,14 @@ JSON товара: {product_json}"""
 
             # Обрабатываем каждый товар
             for i, product in enumerate(products):
-                product_id = str(product.get("_id", {}).get("$oid", f"product_{i}"))
+                # Изменено с _id на mongo_id, с учетом обратной совместимости
+                product_id = ""
+                if "mongo_id" in product and "$oid" in product["mongo_id"]:
+                    product_id = str(product["mongo_id"]["$oid"])
+                elif "_id" in product and "$oid" in product["_id"]:
+                    product_id = str(product["_id"]["$oid"])
+                else:
+                    product_id = f"product_{i}"
 
                 try:
                     # Подготавливаем запрос для Anthropic

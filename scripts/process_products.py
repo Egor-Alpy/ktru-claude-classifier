@@ -41,8 +41,12 @@ async def process_file(file_path: str, api_url: str, api_key: str, output_dir: s
     products = load_products(file_path)
     logger.info(f"Загружено {len(products)} товаров")
 
+    # Преобразуем формат данных при необходимости
+    processed_products = preprocess_products(products)
+    logger.info(f"Преобразовано {len(processed_products)} товаров")
+
     # Разбиваем товары на батчи
-    batches = [products[i:i + MAX_BATCH_SIZE] for i in range(0, len(products), MAX_BATCH_SIZE)]
+    batches = [processed_products[i:i + MAX_BATCH_SIZE] for i in range(0, len(processed_products), MAX_BATCH_SIZE)]
     logger.info(f"Разбито на {len(batches)} батчей")
 
     # Обрабатываем каждый батч
@@ -69,6 +73,32 @@ async def process_file(file_path: str, api_url: str, api_key: str, output_dir: s
     logger.info(f"Обработка завершена, всего обработано {len(batch_results)} товаров")
 
     return batch_results
+
+
+def preprocess_products(products: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Преобразует формат данных товаров при необходимости
+
+    Args:
+        products: Список товаров
+
+    Returns:
+        List[Dict[str, Any]]: Преобразованный список товаров
+    """
+    processed_products = []
+
+    for product in products:
+        # Делаем копию товара
+        processed_product = product.copy()
+
+        # Если товар имеет поле _id, преобразуем его в mongo_id
+        if "_id" in processed_product and "$oid" in processed_product["_id"]:
+            processed_product["mongo_id"] = processed_product["_id"]
+            # Не удаляем _id, чтобы сохранить обратную совместимость
+
+        processed_products.append(processed_product)
+
+    return processed_products
 
 
 def load_products(file_path: str) -> List[Dict[str, Any]]:
