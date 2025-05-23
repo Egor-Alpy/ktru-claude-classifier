@@ -45,7 +45,7 @@ class AnthropicClient:
         start_time = time.time()
 
         try:
-            # Создаем пакет с одним запросом
+            # Создаем пакет с одним запросом с поддержкой веб-поиска
             batch = await self.client.beta.messages.batches.create(
                 requests=[
                     {
@@ -59,7 +59,14 @@ class AnthropicClient:
                                     "content": prompt
                                 }
                             ],
-                            "temperature": 0.0
+                            "temperature": 0.0,
+                            "tools": [
+                                {
+                                    "name": "web_search",
+                                    "description": "Search the web for information about products and KTRU codes"
+                                }
+                            ],
+                            "tool_choice": "auto"
                         }
                     }
                 ]

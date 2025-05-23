@@ -9,6 +9,7 @@ from typing import Dict, Any, List, Optional
 from app.ai.anthropic_client import AnthropicClient
 from app.storage.task_store import TaskStore
 from app.storage.outbox_store import OutboxStore
+from app.services.search_service import SearchService
 from app.core.exceptions import AIException
 from app.config import settings
 
@@ -32,7 +33,15 @@ class ProductProcessor:
         self.task_store = task_store
         self.anthropic_client = anthropic_client
         self.outbox_store = outbox_store
+        self.search_service = SearchService()
         self.ktru_prompt_template = """Я предоставлю тебе JSON-файл с описанием товара. Твоя задача - определить единственный точный код КТРУ (Каталог товаров, работ, услуг) для этого товара. Если ты не можешь определить код с высокой уверенностью (более 95%), ответь только "код не найден".
+
+ВАЖНО: ВСЕГДА ИСПОЛЬЗУЙ ВЕБ-ПОИСК для нахождения точного кода КТРУ. Следуй этим шагам:
+1. Изучи всю информацию из JSON: title, description, category, attributes, brand
+2. Выполни поиск в интернете для нахождения соответствующего кода КТРУ/ОКПД2
+3. Поисковые запросы должны включать "КТРУ код", "ОКПД2 код", наименование товара, его категорию и характеристики
+4. Обрати особое внимание на результаты с сайтов zakupki.gov.ru, zakupki.kontur.ru, cpv.gov.ru, ktru-code.ru
+5. Найди актуальную информацию о кодах КТРУ и сопоставь характеристики товара с требованиями кодов
 
 ## Правила определения:
 1. Анализируй все поля JSON, особое внимание обрати на:
@@ -143,8 +152,11 @@ JSON товара: {product_json}"""
                     product_id = f"product_{i}"
 
                 try:
+                    # Обогащаем данные о товаре через сервис поиска
+                    enriched_product = await self.search_service.enrich_product_data(product)
+
                     # Подготавливаем запрос для Anthropic
-                    product_json = json.dumps(product)
+                    product_json = json.dumps(enriched_product)
                     prompt = self.ktru_prompt_template.format(product_json=product_json)
 
                     # Отправляем запрос к Anthropic API
