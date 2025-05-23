@@ -1,4 +1,3 @@
-# api-service/app/api/v1/endpoints/products.py
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Dict, Any, Optional

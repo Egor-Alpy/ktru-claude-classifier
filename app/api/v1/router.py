@@ -1,4 +1,3 @@
-# api-service/app/api/v1/router.py
 from fastapi import APIRouter
 from app.api.v1.endpoints.processing import router as processing_router
 from app.api.v1.endpoints.products import router as products_router

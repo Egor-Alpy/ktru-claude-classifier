@@ -1,9 +1,9 @@
-# api-service/app/services/product_processor.py
 import logging
 import asyncio
 import uuid
 import json
 import time
+import re
 from typing import Dict, Any, List, Optional
 
 from app.ai.anthropic_client import AnthropicClient
@@ -141,7 +141,7 @@ JSON товара: {product_json}"""
                     self.task_store.redis.hset(f"product_batch:{batch_id}", f"anthropic_batch:{product_id}",
                                                batch_anthropic_id)
 
-                    # Ожидаем завершения обработки (в реальном коде лучше использовать асинхронный подход с колбеками)
+                    # Ожидаем завершения обработки
                     ktru_code = await self._wait_for_anthropic_result(batch_anthropic_id, product_id)
 
                     # Обновляем товар с кодом КТРУ
@@ -165,6 +165,9 @@ JSON товара: {product_json}"""
                         f"error:{product_id}",
                         str(e)
                     )
+
+                    # Увеличиваем счетчик обработанных товаров (даже при ошибке)
+                    self.task_store.redis.hincrby(f"product_batch:{batch_id}", "processed_count", 1)
 
             # Отмечаем батч как завершенный
             pipe = self.task_store.redis.pipeline()
@@ -231,7 +234,7 @@ JSON товара: {product_json}"""
                         result_data = batch_results[product_id]
 
                         if result_data["status"] == "completed":
-                            # Извлекаем текст ответа
+                            # Получаем текст ответа
                             content = result_data.get("content", "")
 
                             # Очищаем текст от лишних символов
@@ -273,7 +276,6 @@ JSON товара: {product_json}"""
         Returns:
             bool: True, если код соответствует формату КТРУ
         """
-        import re
         # Формат: XX.XX.XX.XXX-XXXXXXXX
         pattern = r'^\d{2}\.\d{2}\.\d{2}\.\d{3}-\d{8}$'
         return bool(re.match(pattern, code))
@@ -322,7 +324,7 @@ JSON товара: {product_json}"""
             response["error"] = batch_info["error"]
 
         # Если требуется, добавляем информацию о товарах
-        if include_products and response["status"] == "completed":
+        if include_products and response["status"] in ["completed", "failed"]:
             products = []
 
             # Получаем список ID товаров в батче

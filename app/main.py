@@ -1,4 +1,3 @@
-# api-service/app/main.py
 import logging
 import asyncio
 from fastapi import FastAPI
@@ -6,7 +5,7 @@ from app.api.router import router as api_router
 from app.storage.task_store import TaskStore
 from app.storage.outbox_store import OutboxStore
 from app.services.task_processor import TaskProcessor
-from app.services.product_processor import ProductProcessor  # Новый импорт
+from app.services.product_processor import ProductProcessor
 from app.ai.anthropic_client import AnthropicClient
 from app.services.outbox_relay_service import OutboxRelayService
 from app.config import settings
@@ -31,7 +30,7 @@ outbox_store = None
 task_processor = None
 anthropic_client = None
 outbox_relay_service = None
-product_processor = None  # Новый объект
+product_processor = None
 
 
 @app.on_event("startup")

@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY:-your_secret_api_key_here}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-your_anthropic_api_key_here}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-7-sonnet-20250219}
+      - REDIS_URL=redis://redis:6379/0
+      - CALLBACK_URL=${CALLBACK_URL:-http://localhost:8000/api/v1/callbacks/processing}
+      - CALLBACK_SECRET=${CALLBACK_SECRET:-your_callback_secret_here}
+    volumes:
+      - ./prompts:/app/prompts
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+volumes:
+  redis_data:

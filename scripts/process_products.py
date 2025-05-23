@@ -6,9 +6,9 @@ import json
 import os
 import sys
 import time
-import aiohttp
 from typing import List, Dict, Any
 import logging
+import aiohttp
 
 # Настройка логирования
 logging.basicConfig(
